@@ -14,8 +14,8 @@
   "use strict";
 
   // Configuration
-  const REFRESH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
-  const METRICS_ENDPOINT = "/.netlify/functions/get_metrics";
+  var REFRESH_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
+  var METRICS_ENDPOINT = "/.netlify/functions/get_metrics";
 
   /**
    * Escape HTML to prevent XSS attacks
@@ -23,7 +23,7 @@
    * @returns {string} - Escaped string
    */
   function escapeHtml(str) {
-    const div = document.createElement("div");
+    var div = document.createElement("div");
     div.textContent = String(str || "");
     return div.innerHTML;
   }
@@ -55,12 +55,12 @@
       return 0;
     }
 
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    var now = new Date();
+    var sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    let total = 0;
+    var total = 0;
     dailyGmv.forEach(function (record) {
-      const recordDate = new Date(record.order_date || record.date);
+      var recordDate = new Date(record.order_date || record.date);
       if (recordDate >= sevenDaysAgo) {
         total += parseFloat(record.total_gmv || record.gmv || 0);
       }
@@ -79,7 +79,7 @@
       return 0;
     }
 
-    let total = 0;
+    var total = 0;
     orderStatus.forEach(function (record) {
       total += parseInt(record.order_count || record.count || 0, 10);
     });
@@ -98,11 +98,11 @@
     }
 
     // Sort by order count and take top 5
-    const sorted = topSkus
+    var sorted = topSkus
       .slice()
       .sort(function (a, b) {
-        const countA = parseInt(a.order_count || a.count || 0, 10);
-        const countB = parseInt(b.order_count || b.count || 0, 10);
+        var countA = parseInt(a.order_count || a.count || 0, 10);
+        var countB = parseInt(b.order_count || b.count || 0, 10);
         return countB - countA;
       })
       .slice(0, 5);
