@@ -20,8 +20,10 @@
 -- alternative scheduling options using Supabase Scheduled Functions.
 -- =============================================================================
 
--- Enable pg_cron extension (requires superuser or appropriate permissions)
--- This is idempotent - safe to run multiple times
+-- Enable pg_cron extension
+-- NOTE: This typically requires superuser or rds_superuser role.
+-- In Supabase, this may need to be enabled through the dashboard.
+-- The statement is idempotent (safe to run multiple times if you have permission).
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- =============================================================================

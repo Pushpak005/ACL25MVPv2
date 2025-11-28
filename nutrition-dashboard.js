@@ -424,9 +424,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Auto-refresh every 5 minutes
+  // Auto-refresh nutrition dashboard every 5 minutes
   setInterval(updateDashboard, 5 * 60 * 1000);
   
-  // Also refresh metrics every 5 minutes
-  setInterval(loadMetrics, 5 * 60 * 1000);
+  // Refresh metrics every 15 minutes (aligned with backend materialized view refresh)
+  setInterval(loadMetrics, 15 * 60 * 1000);
 });
