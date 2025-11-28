@@ -310,10 +310,123 @@ function exportData() {
   link.click();
 }
 
+// ============================================================================
+// METRICS API INTEGRATION
+// ============================================================================
+
+/**
+ * Load metrics from the Netlify function endpoint
+ * 
+ * Fetches KPI data from materialized views via /.netlify/functions/get_metrics
+ * and calls render helper functions to display the data.
+ * 
+ * If render helper functions don't exist, warnings are logged but the app won't crash.
+ * 
+ * @param {Object} options - Optional configuration
+ * @param {string} options.apiKey - Admin API key if ADMIN_API_KEY is configured
+ */
+async function loadMetrics(options = {}) {
+  const metricsUrl = '/.netlify/functions/get_metrics';
+  
+  try {
+    console.log('[loadMetrics] Fetching metrics from:', metricsUrl);
+    
+    // Build headers
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Add admin API key if provided
+    if (options.apiKey) {
+      headers['X-Admin-Api-Key'] = options.apiKey;
+    }
+    
+    const response = await fetch(metricsUrl, {
+      method: 'GET',
+      headers
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      throw new Error(data.message || 'Unknown error fetching metrics');
+    }
+    
+    console.log('[loadMetrics] Successfully fetched metrics:', {
+      timestamp: data.timestamp,
+      daily_gmv_count: data.daily_gmv?.length || 0,
+      top_skus_count: data.top_skus?.length || 0,
+      vendor_kpis_count: data.vendor_kpis?.length || 0,
+      hourly_demand_count: data.hourly_demand?.length || 0,
+      order_status_count: data.order_status?.length || 0
+    });
+    
+    // Call render helper functions if they exist
+    // NOTE: Adapt these function names if your helpers are named differently
+    
+    if (typeof renderGmvChart === 'function') {
+      renderGmvChart(data.daily_gmv);
+    } else {
+      console.warn('[loadMetrics] renderGmvChart not found - skipping daily GMV chart');
+    }
+    
+    if (typeof renderTopSkus === 'function') {
+      renderTopSkus(data.top_skus);
+    } else {
+      console.warn('[loadMetrics] renderTopSkus not found - skipping top SKUs render');
+    }
+    
+    if (typeof renderVendorKpis === 'function') {
+      renderVendorKpis(data.vendor_kpis);
+    } else {
+      console.warn('[loadMetrics] renderVendorKpis not found - skipping vendor KPIs render');
+    }
+    
+    if (typeof renderHourlyHeatmap === 'function') {
+      renderHourlyHeatmap(data.hourly_demand);
+    } else {
+      console.warn('[loadMetrics] renderHourlyHeatmap not found - skipping hourly heatmap');
+    }
+    
+    if (typeof renderOrderStatusSummary === 'function') {
+      renderOrderStatusSummary(data.order_status);
+    } else {
+      console.warn('[loadMetrics] renderOrderStatusSummary not found - skipping order status summary');
+    }
+    
+    return data;
+    
+  } catch (error) {
+    console.error('[loadMetrics] Error fetching metrics:', error.message);
+    
+    // Don't crash the app - log and return null
+    // The dashboard can still function with local nutrition tracking
+    return null;
+  }
+}
+
 // Initialize dashboard on page load
 document.addEventListener('DOMContentLoaded', () => {
   updateDashboard();
   
+  // Load metrics from the API (if available)
+  // This runs asynchronously and won't block the nutrition dashboard
+  loadMetrics().then(data => {
+    if (data) {
+      console.log('[DOMContentLoaded] Metrics loaded successfully');
+    } else {
+      console.log('[DOMContentLoaded] Metrics not available - continuing with local data only');
+    }
+  });
+  
   // Auto-refresh every 5 minutes
   setInterval(updateDashboard, 5 * 60 * 1000);
+  
+  // Also refresh metrics every 5 minutes
+  setInterval(loadMetrics, 5 * 60 * 1000);
 });
