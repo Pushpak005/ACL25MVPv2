@@ -21,7 +21,7 @@ jobs:
 
       - name: Run seeder
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.postgresql://postgres:InkBEggOJ7lmcUNi@db.vemjldavwzwbkvpsiccq.supabase.co:5432/postgres }}
         run: |
           # adjust the path below if your seeder filename is different
           node scripts/scripts_seedAll_Version7.js
